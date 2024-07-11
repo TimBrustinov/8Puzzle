@@ -10,61 +10,47 @@ using Microsoft.Xna.Framework;
 
 namespace _8Puzzle
 {
-    internal class GameState
+    public class GameState
     {
         public GridNode[,] Grid;
         public GameState Previous;
-        public GameState(GridNode[,] grid) 
+        public GameState(GridNode[,] grid, GameState previous) 
         { 
-            Grid = grid;
+            Grid = (GridNode[,])grid.Clone();
+            Previous = previous;
         }
 
-        public List<GridNode[,]> GenerateSuccessors(GridNode emptyNode)
+        public List<GridNode[,]> GenerateSuccessors()
         {
             List<GridNode[,]> successors = new List<GridNode[,]>();
-            if(emptyNode.GridX - 1 >= 0)
+            GridNode currentEmptyNode = FindEmptyNode(Grid);
+            if(currentEmptyNode.GridX - 1 >= 0)
             {
-                successors.Add(CreateNewSuccessorGrid(emptyNode.GridX - 1, emptyNode.GridY));
+                successors.Add(CreateSuccessorGrid(currentEmptyNode.GridX - 1, currentEmptyNode.GridY));
             }
-            if(emptyNode.GridX + 1 < 3)
+            if(currentEmptyNode.GridX + 1 < 3)
             {
-                successors.Add(CreateNewSuccessorGrid(emptyNode.GridX + 1, emptyNode.GridY));
+                successors.Add(CreateSuccessorGrid(currentEmptyNode.GridX + 1, currentEmptyNode.GridY));
             }
-            if(emptyNode.GridY + 1 < Grid.GetLength(0))
+            if(currentEmptyNode.GridY + 1 < Grid.GetLength(0))
             {
-                successors.Add(CreateNewSuccessorGrid(emptyNode.GridX, emptyNode.GridY + 1));
+                successors.Add(CreateSuccessorGrid(currentEmptyNode.GridX, currentEmptyNode.GridY + 1));
             }
-            if(emptyNode.GridY - 1 >= 0)
+            if(currentEmptyNode.GridY - 1 >= 0)
             {
-                successors.Add(CreateNewSuccessorGrid(emptyNode.GridX, emptyNode.GridY - 1));
+                successors.Add(CreateSuccessorGrid(currentEmptyNode.GridX, currentEmptyNode.GridY - 1));
             }
             return successors;
         }
 
-        private GridNode[,] CreateNewSuccessorGrid(int newEmptyNodePositionX, int newEmptyNodePositionY)
+        private GridNode[,] CreateSuccessorGrid(int newEmptyNodePositionX, int newEmptyNodePositionY)
         {
-            GridNode[,] newGrid = new GridNode[Grid.GetLength(0), Grid.GetLength(1)];
-
-            //create new grid with duplicate values of the current grid
-            for (int i = 0; i < newGrid.GetLength(0); i++)
-            {
-                for (int j = 0; j < newGrid.GetLength(1); j++)
-                {
-                    GridNode nodeToCopy = Grid[i, j];
-                    newGrid[i, j] = new GridNode(nodeToCopy);
-                }
-            }
-
-            //find the empty node
-            foreach (var node in newGrid)
-            {
-                //node will be the empty node
-                if(node.Value == "0")
-                {
-                    Swap(node, newGrid[newEmptyNodePositionX, newEmptyNodePositionY]);
-                }
-            }
-
+            // clone the current grid
+            GridNode[,] newGrid = (GridNode[,])Grid.Clone();
+            //find empty node
+            var emptyNode = FindEmptyNode(newGrid);
+            //swap the current empty node with node at (newEmptyNodePositionX, new emptyNodePositionY)
+            Swap(emptyNode, newGrid[newEmptyNodePositionX, newEmptyNodePositionY]);
             return newGrid;
         }
         private void Swap(GridNode a, GridNode b)
@@ -77,5 +63,18 @@ namespace _8Puzzle
             b.Value = tempVal;
             b.Color = tempColor;
         }
+
+        private GridNode FindEmptyNode(GridNode[,] nodes)
+        {
+            foreach (var node in nodes)
+            {
+                if (node.Value == "0")
+                {
+                    return node;
+                }
+            }
+            return null;
+        }
+
     }
 }

@@ -18,7 +18,7 @@ namespace _8Puzzle
         private GridNode emptyNode;
         private GridNode selectedNode;
 
-
+        private List<GridNode[,]> games;
 
         private Point cellSize = new Point(100, 100);
         private SpriteFont font;
@@ -52,6 +52,7 @@ namespace _8Puzzle
                 { 3, 5, 6 },
                 { 7, 1, 0 }
             };
+
             spriteBatch = new SpriteBatch(GraphicsDevice);
             Texture2D pixel = new Texture2D(graphics.GraphicsDevice, 1, 1);
             pixel.SetData(new Color[] { Color.White });
@@ -72,7 +73,9 @@ namespace _8Puzzle
             }
 
             GameState gameState = new GameState(gridNodes);
-            gameState.GenerateSuccessors(emptyNode);
+            games = gameState.GenerateSuccessors();
+
+
 
             base.Initialize();
         }
@@ -89,6 +92,15 @@ namespace _8Puzzle
                 Exit();
 
             MouseState ms = Mouse.GetState();
+
+            if(Keyboard.GetState().IsKeyDown(Keys.A))
+            {
+                gridNodes = games[0];
+            }
+            else if(Keyboard.GetState().IsKeyDown(Keys.D))
+            { 
+                gridNodes = games[1]; 
+            }
             //foreach (var node in gridNodes)
             //{
             //    if (ms.LeftButton == ButtonState.Pressed && ms != previousMouseState && node.Rect.Contains(ms.Position))
