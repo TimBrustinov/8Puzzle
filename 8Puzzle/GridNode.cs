@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using WarmupProgram;
 
 namespace _8Puzzle
 {
@@ -29,6 +28,16 @@ namespace _8Puzzle
             GridPosition = gridPosition;
             Rect = new Rectangle(position.ToPoint(), size);
             Font = font;
+        }
+
+        public GridNode(GridNode node)
+        {
+            Value = node.Value;
+            Color = node.Color;
+            Texture = node.Texture;
+            GridPosition = node.GridPosition;
+            Font = node.Font;
+            Rect = node.Rect;
         }
 
         public void Draw(SpriteBatch spriteBatch)

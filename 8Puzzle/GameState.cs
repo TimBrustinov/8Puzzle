@@ -19,30 +19,53 @@ namespace _8Puzzle
             Grid = grid;
         }
 
-        public void GenerateSuccessors(GridNode emptyNode)
+        public List<GridNode[,]> GenerateSuccessors(GridNode emptyNode)
         {
-            if(emptyNode.GridX - 1 > 0)
+            List<GridNode[,]> successors = new List<GridNode[,]>();
+            if(emptyNode.GridX - 1 >= 0)
             {
-                Swap(emptyNode);
+                successors.Add(CreateNewSuccessorGrid(emptyNode.GridX - 1, emptyNode.GridY));
             }
+            if(emptyNode.GridX + 1 < 3)
+            {
+                successors.Add(CreateNewSuccessorGrid(emptyNode.GridX + 1, emptyNode.GridY));
+            }
+            if(emptyNode.GridY + 1 < Grid.GetLength(0))
+            {
+                successors.Add(CreateNewSuccessorGrid(emptyNode.GridX, emptyNode.GridY + 1));
+            }
+            if(emptyNode.GridY - 1 >= 0)
+            {
+                successors.Add(CreateNewSuccessorGrid(emptyNode.GridX, emptyNode.GridY - 1));
+            }
+            return successors;
         }
 
-        private GridNode[,] CreateNewSuccessorGrid()
+        private GridNode[,] CreateNewSuccessorGrid(int newEmptyNodePositionX, int newEmptyNodePositionY)
         {
             GridNode[,] newGrid = new GridNode[Grid.GetLength(0), Grid.GetLength(1)];
+
+            //create new grid with duplicate values of the current grid
             for (int i = 0; i < newGrid.GetLength(0); i++)
             {
                 for (int j = 0; j < newGrid.GetLength(1); j++)
                 {
                     GridNode nodeToCopy = Grid[i, j];
-                    newGrid[i, j] = new GridNode(nodeToCopy.Value, nodeToCopy.Color, nodeToCopy.Texture, nodeToCopy.GridPosition, nodeToCopy.Rect.Location.ToVector2(), new Point(nodeToCopy.Rect.Width, nodeToCopy.Rect.Height), nodeToCopy.Font);
-                    if (newGrid[i, j].Value == "0")
-                    {
-                        emptyNode = ;
-                    }
-                    colorIndex++;
+                    newGrid[i, j] = new GridNode(nodeToCopy);
                 }
             }
+
+            //find the empty node
+            foreach (var node in newGrid)
+            {
+                //node will be the empty node
+                if(node.Value == "0")
+                {
+                    Swap(node, newGrid[newEmptyNodePositionX, newEmptyNodePositionY]);
+                }
+            }
+
+            return newGrid;
         }
         private void Swap(GridNode a, GridNode b)
         {

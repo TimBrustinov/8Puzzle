@@ -6,7 +6,6 @@ using SharpDX.DXGI;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using WarmupProgram;
 namespace _8Puzzle
 {
     public class Game1 : Game
@@ -16,9 +15,10 @@ namespace _8Puzzle
         private SpriteBatch spriteBatch;
 
         private GridNode[,] gridNodes = new GridNode[3, 3];
-        private Graph Graph;
         private GridNode emptyNode;
         private GridNode selectedNode;
+
+
 
         private Point cellSize = new Point(100, 100);
         private SpriteFont font;
@@ -71,6 +71,9 @@ namespace _8Puzzle
                 }
             }
 
+            GameState gameState = new GameState(gridNodes);
+            gameState.GenerateSuccessors(emptyNode);
+
             base.Initialize();
         }
         protected override void LoadContent()
@@ -86,31 +89,31 @@ namespace _8Puzzle
                 Exit();
 
             MouseState ms = Mouse.GetState();
-            foreach (var node in gridNodes)
-            {
-                if (ms.LeftButton == ButtonState.Pressed && ms != previousMouseState && node.Rect.Contains(ms.Position))
-                {
-                    //check if you can swap the selectedNode with the empty node
-                    if (selectedNode != null && node == emptyNode)
-                    {
-                        if (CheckMove(selectedNode))
-                        {
-                            Swap(selectedNode, emptyNode);
-                            emptyNode = selectedNode;
-                            selectedNode = null;
-                            Console.WriteLine("New empty node position: " + emptyNode.GridPosition.ToString());
-                            break;
-                        }
-                    }
+            //foreach (var node in gridNodes)
+            //{
+            //    if (ms.LeftButton == ButtonState.Pressed && ms != previousMouseState && node.Rect.Contains(ms.Position))
+            //    {
+            //        //check if you can swap the selectedNode with the empty node
+            //        if (selectedNode != null && node == emptyNode)
+            //        {
+            //            if (CheckMove(selectedNode))
+            //            {
+            //                Swap(selectedNode, emptyNode);
+            //                emptyNode = selectedNode;
+            //                selectedNode = null;
+            //                Console.WriteLine("New empty node position: " + emptyNode.GridPosition.ToString());
+            //                break;
+            //            }
+            //        }
 
-                    //check if the new selectedNode is not empty node
-                    if (node != emptyNode)
-                    {
-                        selectedNode = node;
-                        Console.WriteLine("Selected Node: " + selectedNode.Value);
-                    }
-                }
-            }
+            //        //check if the new selectedNode is not empty node
+            //        if (node != emptyNode)
+            //        {
+            //            selectedNode = node;
+            //            Console.WriteLine("Selected Node: " + selectedNode.Value);
+            //        }
+            //    }
+            //}
             previousMouseState = ms;
             // TODO: Add your update logic here
 
