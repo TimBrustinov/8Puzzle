@@ -10,7 +10,7 @@ namespace _8Puzzle
 {
     public class GridNode
     {
-        public string Value { get; set; }
+        public int Value { get; set; }
         public Point GridPosition { get; set; }
         public int GridX => GridPosition.X;
         public int GridY => GridPosition.Y;
@@ -20,7 +20,7 @@ namespace _8Puzzle
         public Rectangle Rect { get; set; }
         public SpriteFont Font { get; set; }
 
-        public GridNode(string value, Color color, Texture2D texture, Point gridPosition, Vector2 position, Point size, SpriteFont font)
+        public GridNode(int value, Color color, Texture2D texture, Point gridPosition, Vector2 position, Point size, SpriteFont font)
         {
             Value = value;
             Color = color;
@@ -44,9 +44,9 @@ namespace _8Puzzle
         {
             spriteBatch.Draw(Texture, Rect, Color);
 
-            if(Value != "0")
+            if(Value != 0)
             {
-                spriteBatch.DrawString(Font, Value, new Vector2(Rect.X, Rect.Y), Color.White);
+                spriteBatch.DrawString(Font, Value.ToString(), new Vector2(Rect.X, Rect.Y), Color.White);
             }
         }
     }

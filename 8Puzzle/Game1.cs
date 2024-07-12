@@ -18,7 +18,8 @@ namespace _8Puzzle
         private GridNode emptyNode;
         private GridNode selectedNode;
 
-        private List<GridNode[,]> games;
+        private List<GridNode[,]> Path;
+        private int pathIndex = 0;
 
         private Point cellSize = new Point(100, 100);
         private SpriteFont font;
@@ -48,9 +49,9 @@ namespace _8Puzzle
         {
             int[,] nodeValues = new int[3, 3]
             {
-                { 8, 2, 4 },
-                { 3, 5, 6 },
-                { 7, 1, 0 }
+                { 1, 3, 4 }, 
+                { 8, 0, 6 }, 
+                { 5, 2, 7 }
             };
 
             spriteBatch = new SpriteBatch(GraphicsDevice);
@@ -63,7 +64,7 @@ namespace _8Puzzle
             {
                 for (int j = 0; j < gridNodes.GetLength(1); j++)
                 {
-                    gridNodes[i, j] = new GridNode(nodeValues[i, j].ToString(), colors[nodeValues[i, j]], pixel, new Point(i, j), new Vector2(i * (cellSize.X + spacing), j * (cellSize.Y + spacing)), cellSize, font);
+                    gridNodes[i, j] = new GridNode(nodeValues[i, j], colors[nodeValues[i, j]], pixel, new Point(i, j), new Vector2(i * (cellSize.X + spacing), j * (cellSize.Y + spacing)), cellSize, font);
                     if (nodeValues[i, j] == 0)
                     {
                         emptyNode = gridNodes[i, j];
@@ -72,11 +73,26 @@ namespace _8Puzzle
                 }
             }
 
-            GameState gameState = new GameState(gridNodes);
-            games = gameState.GenerateSuccessors();
+            Console.WriteLine("Initial Game");
+            foreach (GridNode node in gridNodes)
+            {
+                Console.WriteLine(node.GridPosition.ToString() + " has value: " + node.Value);
+            }
 
+            GameState gameState = new GameState(gridNodes, null);
+            Solver solver = new Solver(gridNodes);
 
+            ////games = gameState.GenerateSuccessors();
+            //Console.WriteLine("Initial Game after creating successors");
+            //foreach (GridNode node in gridNodes)
+            //{
+            //    Console.WriteLine(node.GridPosition.ToString() + " has value: " + node.Value);
+            //}
+            var solverOutput = solver.Solve(gameState);
 
+            bool solved = solverOutput.isSolved;
+            Path = solverOutput.path;
+            ;
             base.Initialize();
         }
         protected override void LoadContent()
@@ -93,13 +109,15 @@ namespace _8Puzzle
 
             MouseState ms = Mouse.GetState();
 
-            if(Keyboard.GetState().IsKeyDown(Keys.A))
+            if(gameTime.ElapsedGameTime.TotalSeconds % 2 == 0)
             {
-                gridNodes = games[0];
-            }
-            else if(Keyboard.GetState().IsKeyDown(Keys.D))
-            { 
-                gridNodes = games[1]; 
+                gridNodes = Path[pathIndex];
+
+                foreach (GridNode node in gridNodes)
+                {
+                    Console.WriteLine(node.GridPosition.ToString() + " has value: " + node.Value);
+                }
+                pathIndex++;
             }
             //foreach (var node in gridNodes)
             //{
