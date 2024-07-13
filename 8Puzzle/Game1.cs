@@ -1,11 +1,9 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using SharpDX.Direct3D9;
-using SharpDX.DXGI;
 using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
+
 namespace _8Puzzle
 {
     public class Game1 : Game
@@ -13,10 +11,16 @@ namespace _8Puzzle
         private MouseState previousMouseState = default;
         private GraphicsDeviceManager graphics;
         private SpriteBatch spriteBatch;
+        private Texture2D pixel;
+        private Random random;
 
         private GridNode[,] gridNodes = new GridNode[3, 3];
-        private GridNode emptyNode;
-        private GridNode selectedNode;
+
+        private Button RandomizeButton;
+        private Button SolveButton;
+
+        private Solver Solver;
+
 
         private List<GridNode[,]> Path;
         private int pathIndex = 0;
@@ -24,6 +28,9 @@ namespace _8Puzzle
         private Point cellSize = new Point(100, 100);
         private SpriteFont font;
         private int spacing = 1;
+
+        private double elapsedTime = 0;
+        private const double UpdateInterval = 1.0; // Update every second
 
         private Dictionary<int, Color> colors = new Dictionary<int, Color>()
         {
@@ -47,59 +54,39 @@ namespace _8Puzzle
 
         protected override void Initialize()
         {
-            int[,] nodeValues = new int[3, 3]
+            random = new Random();  
+            spriteBatch = new SpriteBatch(GraphicsDevice);
+            pixel = new Texture2D(graphics.GraphicsDevice, 1, 1);
+            pixel.SetData(new Color[] { Color.White });
+            font = Content.Load<SpriteFont>("Font");
+
+            RandomizeButton = new Button(new Point(400, 0), pixel, font, "Randomize", Color.White, Color.Black);
+            SolveButton = new Button(new Point(400, 60), pixel, font, "Solve", Color.White, Color.Black);
+            Solver = new Solver();
+
+
+            int[,] intialBoard = new int[3, 3]
             {
-                { 1, 3, 4 }, 
-                { 8, 0, 6 }, 
-                { 5, 2, 7 }
+                { 1, 4, 7 },
+                { 2, 5, 8 },
+                { 3, 6, 0 }
             };
 
-            spriteBatch = new SpriteBatch(GraphicsDevice);
-            Texture2D pixel = new Texture2D(graphics.GraphicsDevice, 1, 1);
-            pixel.SetData(new Color[] { Color.White });
-
-            font = Content.Load<SpriteFont>("Font");
-            int colorIndex = 0;
             for (int i = 0; i < gridNodes.GetLength(0); i++)
             {
                 for (int j = 0; j < gridNodes.GetLength(1); j++)
                 {
-                    gridNodes[i, j] = new GridNode(nodeValues[i, j], colors[nodeValues[i, j]], pixel, new Point(i, j), new Vector2(i * (cellSize.X + spacing), j * (cellSize.Y + spacing)), cellSize, font);
-                    if (nodeValues[i, j] == 0)
-                    {
-                        emptyNode = gridNodes[i, j];
-                    }
-                    colorIndex++;
+                    gridNodes[i, j] = new GridNode(intialBoard[i, j], colors[intialBoard[i, j]], pixel, new Point(i, j), new Vector2(i * (cellSize.X + spacing), j * (cellSize.Y + spacing)), cellSize, font);
                 }
             }
 
-            Console.WriteLine("Initial Game");
-            foreach (GridNode node in gridNodes)
-            {
-                Console.WriteLine(node.GridPosition.ToString() + " has value: " + node.Value);
-            }
-
-            GameState gameState = new GameState(gridNodes, null);
-            Solver solver = new Solver(gridNodes);
-
-            ////games = gameState.GenerateSuccessors();
-            //Console.WriteLine("Initial Game after creating successors");
-            //foreach (GridNode node in gridNodes)
-            //{
-            //    Console.WriteLine(node.GridPosition.ToString() + " has value: " + node.Value);
-            //}
-            var solverOutput = solver.Solve(gameState);
-
-            bool solved = solverOutput.isSolved;
-            Path = solverOutput.path;
-            ;
+            Path = new();
             base.Initialize();
         }
+
         protected override void LoadContent()
         {
             spriteBatch = new SpriteBatch(GraphicsDevice);
-
-            // TODO: use this.Content to load your game content here
         }
 
         protected override void Update(GameTime gameTime)
@@ -107,53 +94,37 @@ namespace _8Puzzle
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
+            elapsedTime += gameTime.ElapsedGameTime.TotalSeconds;
             MouseState ms = Mouse.GetState();
+            if(ms.LeftButton == ButtonState.Pressed && previousMouseState != ms)
+            {
+                if(RandomizeButton.Rectangle.Contains(ms.Position))
+                {
+                    CreateBoard();
+                }
+                else if(SolveButton.Rectangle.Contains(ms.Position))
+                {
+                    Solve();
+                }
+            }
 
-            if(gameTime.ElapsedGameTime.TotalSeconds % 2 == 0)
+            if (elapsedTime >= UpdateInterval && pathIndex < Path.Count)
             {
                 gridNodes = Path[pathIndex];
-
-                foreach (GridNode node in gridNodes)
-                {
-                    Console.WriteLine(node.GridPosition.ToString() + " has value: " + node.Value);
-                }
                 pathIndex++;
+                elapsedTime = 0;
             }
-            //foreach (var node in gridNodes)
-            //{
-            //    if (ms.LeftButton == ButtonState.Pressed && ms != previousMouseState && node.Rect.Contains(ms.Position))
-            //    {
-            //        //check if you can swap the selectedNode with the empty node
-            //        if (selectedNode != null && node == emptyNode)
-            //        {
-            //            if (CheckMove(selectedNode))
-            //            {
-            //                Swap(selectedNode, emptyNode);
-            //                emptyNode = selectedNode;
-            //                selectedNode = null;
-            //                Console.WriteLine("New empty node position: " + emptyNode.GridPosition.ToString());
-            //                break;
-            //            }
-            //        }
 
-            //        //check if the new selectedNode is not empty node
-            //        if (node != emptyNode)
-            //        {
-            //            selectedNode = node;
-            //            Console.WriteLine("Selected Node: " + selectedNode.Value);
-            //        }
-            //    }
-            //}
-            previousMouseState = ms;
-            // TODO: Add your update logic here
-
+            previousMouseState = Mouse.GetState();
             base.Update(gameTime);
         }
-        
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.Black);
             spriteBatch.Begin();
+
+            RandomizeButton.Draw(spriteBatch);
+            SolveButton.Draw(spriteBatch);
 
             foreach (GridNode node in gridNodes)
             {
@@ -163,5 +134,80 @@ namespace _8Puzzle
             spriteBatch.End();
             base.Draw(gameTime);
         }
+
+        private void CreateBoard()
+        {
+            Random random = new Random();
+            int[,] nodeValues;
+            do
+            {
+                nodeValues = GenerateRandomBoard(random);
+            } while (!IsSolvable(nodeValues));
+
+            for (int i = 0; i < gridNodes.GetLength(0); i++)
+            {
+                for (int j = 0; j < gridNodes.GetLength(1); j++)
+                {
+                    gridNodes[i, j] = new GridNode(nodeValues[i, j], colors[nodeValues[i, j]], pixel, new Point(i, j), new Vector2(i * (cellSize.X + spacing), j * (cellSize.Y + spacing)), cellSize, font);
+                }
+            }
+        }
+
+        private int[,] GenerateRandomBoard(Random random)
+        {
+            List<int> values = new List<int>();
+            for (int i = 0; i < 9; i++)
+            {
+                values.Add(i);
+            }
+
+            int[,] board = new int[3, 3];
+            for (int i = 0; i < 3; i++)
+            {
+                for (int j = 0; j < 3; j++)
+                {
+                    int randomIndex = random.Next(values.Count);
+                    board[i, j] = values[randomIndex];
+                    values.RemoveAt(randomIndex);
+                }
+            }
+            return board;
+        }
+
+        int getInvCount(int[] arr)
+        {
+            int inv_count = 0;
+            for (int i = 0; i < 9; i++)
+                for (int j = i + 1; j < 9; j++)
+                    if (arr[i] > 0 && arr[j] > 0 && arr[i] > arr[j])
+                        inv_count++;
+            return inv_count;
+        }
+
+        // This function returns true
+        // if given 8 puzzle is solvable.
+        bool IsSolvable(int[,] puzzle)
+        {
+            int[] linearForm;
+            linearForm = new int[9];
+            int k = 0;
+
+            for (int i = 0; i < 3; i++)
+                for (int j = 0; j < 3; j++)
+                    linearForm[k++] = puzzle[i, j];
+
+            // Count inversions in given 8 puzzle
+            int invCount = getInvCount(linearForm);
+            // return true if inversion count is even.
+            return (invCount % 2 == 0);
+        }
+
+        private void Solve()
+        {
+            GameState gameState = new GameState(gridNodes, null);
+            var solverOutput = Solver.Solve(gameState);
+            Path = solverOutput.path;
+        }
+
     }
 }

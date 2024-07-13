@@ -14,7 +14,6 @@ namespace _8Puzzle
 {
     public class Solver
     {
-        GridNode[,] CurrentGrid;
         int[,] GoalStateValues = new int[3, 3]
         {
                 { 1, 4, 7 }, 
@@ -22,9 +21,8 @@ namespace _8Puzzle
                 { 3, 6, 0 }
         };
 
-        public Solver(GridNode[,] currentGrid)
+        public Solver()
         {
-            CurrentGrid = currentGrid;
         }
 
         public (bool isSolved, List<GridNode[,]> path) Solve(GameState initialState)
@@ -35,7 +33,6 @@ namespace _8Puzzle
             while(frontier.Count > 0)
             {
                 var curr = frontier.Dequeue();
-                CurrentGrid = curr.Grid;
                 visited.Add(curr);
                 Console.WriteLine("Current Grid");
                 curr.Print();
@@ -102,7 +99,6 @@ namespace _8Puzzle
             return cost;
         }
 
-        
 
         private (int x, int y) FindGoalIndex(int value)
         {
